@@ -35,9 +35,7 @@ export interface DepartmentGroups {
 export class UsersService {
   constructor(private readonly httpService: HttpService) {}
 
-  async getUsersByCompanyDepartmentFilter(
-    department?: string,
-  ): Promise<DepartmentGroups> {
+  async getUsers(department?: string): Promise<DepartmentGroups> {
     const url = 'https://dummyjson.com/users';
 
     try {
@@ -45,7 +43,6 @@ export class UsersService {
         this.httpService.get<{ users: User[] }>(url),
       );
       const users = response.data.users;
-
       const filteredUsers = department
         ? users.filter(
             (user) =>
@@ -71,6 +68,43 @@ export class UsersService {
     } catch (error) {
       throw new Error(
         `Failed to fetch and filter users by department: ${error.message}`,
+      );
+    }
+  }
+
+  async getDepartmentInfo(department?: string): Promise<any> {
+    const url = 'https://dummyjson.com/users';
+
+    try {
+      const response = await firstValueFrom(
+        this.httpService.get<{ users: User[] }>(url),
+      );
+      let users = response.data.users;
+      // Filter users by department if parameter is provided
+      if (department) {
+        users = users.filter(
+          (user) =>
+            user.company.department.toLowerCase() === department.toLowerCase(),
+        );
+      }
+      return {
+        male: users.filter((user: any) => user.gender === 'male').length,
+        female: users.filter((user: any) => user.gender === 'female').length,
+        ageRange: `${Math.min(...users.map((u) => u.age))}-${Math.max(...users.map((u) => u.age))}`,
+        hair: users.reduce((acc, user: any) => {
+          const color = user.hair.color;
+          acc[color] = (acc[color] || 0) + 1;
+          return acc;
+        }, {}),
+        addressUser: users.reduce((acc, user: any) => {
+          acc[`${user?.firstName || ''}${user?.lastName || ''}`] =
+            user.address.postalCode;
+          return acc;
+        }, {}),
+      };
+    } catch (error) {
+      throw new Error(
+        `Failed to fetch department statistics: ${error.message}`,
       );
     }
   }

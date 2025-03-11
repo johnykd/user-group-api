@@ -6,12 +6,17 @@ import { UsersService, DepartmentGroups } from './users.service';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Get('department')
+  @Get('/')
+  async getUsers(
+    @Query('department') department?: string,
+  ): Promise<DepartmentGroups> {
+    return this.usersService.getUsers(department);
+  }
+
+  @Get('departmentInfo')
   async getUsersByDepartment(
     @Query('department') department?: string,
   ): Promise<DepartmentGroups> {
-    return this.usersService.getUsersByCompanyDepartmentFilter(
-      department?.toLowerCase(),
-    );
+    return this.usersService.getDepartmentInfo(department);
   }
 }
